@@ -1,0 +1,48 @@
+name: Ron Content Intelligence Pipeline
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:       # Also allows manual trigger from GitHub UI
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run content intelligence pipeline
+        env:
+          APIFY_KEY: ${{ secrets.APIFY_KEY }}
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_KEY }}
+        run: npx tsx ron/pipeline/index.ts
+
+      - name: Upload weekly brief as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-brief-${{ github.run_id }}
+          path: |
+            ron/weekly_brief.md
+            ron/data/posts.json
+          retention-days: 30
+
+      - name: Post brief to Discord
+        if: env.DISCORD_WEBHOOK != ''
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          BRIEF=$(cat ron/weekly_brief.md | head -c 1900)
+          curl -s -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"**Weekly Content Brief — $(date +%Y-%m-%d)**\n\`\`\`\n${BRIEF}\n\`\`\`\"}"
