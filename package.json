@@ -40,6 +40,7 @@
     "model context protocol"
   ],
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@apify/datastructures": "^2.0.3",
     "@apify/log": "^2.5.16",
     "@apify/utilities": "^2.25.1",
@@ -54,6 +55,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mcp-client-capabilities": "^0.0.5",
+    "node-cron": "^4.2.1",
     "to-json-schema": "^0.2.5",
     "yargs": "^17.7.2",
     "zod": "^4.1.13"
